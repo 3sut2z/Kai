@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Get Code</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        .code-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+            cursor: pointer;
+        }
+        .code-container p {
+            font-size: 18px;
+            color: #333;
+            margin: 10px 0;
+        }
+        .code-container .generated-code {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+
+<div class="code-container" id="codeContainer">
+    <p>Click anywhere to copy the code!</p>
+    <p class="generated-code" id="generatedCode">Loading...</p>
+</div>
+
+<script>
+    // Hàm tạo chuỗi ngẫu nhiên với độ dài tùy chọn
+    function generateRandomString(length) {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            result += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        return result;
+    }
+
+    // Lấy user_id từ URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('user');
+
+    if (userId) {
+        // Tạo URL ngẫu nhiên 6 ký tự
+        const randomUrlCode = generateRandomString(6);
+        document.getElementById('generatedCode').textContent = randomUrlCode;
+
+        // Tạo mã code 32 ký tự ngẫu nhiên
+        const randomCode = generateRandomString(32);
+
+        // Hiển thị status và code
+        const response = {
+            status: "success",
+            code: randomCode
+        };
+
+        console.log(response); // In response ra console, có thể dùng API để gửi dữ liệu
+
+        // Sao chép khi người dùng click vào phần tử
+        document.getElementById('codeContainer').addEventListener('click', function () {
+            const textarea = document.createElement('textarea');
+            textarea.value = randomCode;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            alert("Code đã được sao chép vào bộ nhớ tạm!");
+        });
+    } else {
+        document.getElementById('generatedCode').textContent = "User ID không hợp lệ!";
+    }
+</script>
+
+</body>
+</html>
