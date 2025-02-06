@@ -59,17 +59,23 @@
     const userId = urlParams.get('user');
 
     if (userId) {
+        // Kiểm tra xem có mã code đã lưu trong localStorage cho user_id này chưa
+        let savedCode = localStorage.getItem(userId);
+
+        if (!savedCode) {
+            // Nếu chưa có mã code, tạo mã code mới và lưu vào localStorage
+            savedCode = generateRandomString(32);
+            localStorage.setItem(userId, savedCode);
+        }
+
         // Tạo URL ngẫu nhiên 6 ký tự
         const randomUrlCode = generateRandomString(6);
         document.getElementById('generatedCode').textContent = randomUrlCode;
 
-        // Tạo mã code 32 ký tự ngẫu nhiên
-        const randomCode = generateRandomString(32);
-
         // Hiển thị status và code
         const response = {
             status: "success",
-            code: randomCode
+            code: savedCode
         };
 
         console.log(response); // In response ra console, có thể dùng API để gửi dữ liệu
@@ -77,7 +83,7 @@
         // Sao chép khi người dùng click vào phần tử
         document.getElementById('codeContainer').addEventListener('click', function () {
             const textarea = document.createElement('textarea');
-            textarea.value = randomCode;
+            textarea.value = savedCode;
             document.body.appendChild(textarea);
             textarea.select();
             document.execCommand('copy');
