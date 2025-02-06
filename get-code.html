@@ -17,13 +17,13 @@
         }
         .code-container {
     background-color: #fff;
-    padding: 30px 40px; /* Tăng padding để khung rộng hơn */
-    border-radius: 12px; /* Góc bo tròn lớn hơn */
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Tăng độ mờ của shadow */
-    max-width: 500px; /* Tăng chiều rộng tối đa */
+    padding: 30px 40px;
+    border-radius: 12px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    max-width: 500px;
     width: 100%;
     cursor: pointer;
-    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Thêm hiệu ứng khi hover */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .code-container:hover {
@@ -79,13 +79,13 @@
             storedData = JSON.parse(storedData);
             
             if (isCodeExpired(storedData.timestamp)) {
-                storedData.code = generateRandomString(32);
+                storedData.code = generateRandomString(16);
                 storedData.timestamp = new Date().getTime();
                 localStorage.setItem(userId, JSON.stringify(storedData));
             }
         } else {
             storedData = {
-                code: generateRandomString(32),
+                code: generateRandomString(16),
                 timestamp: new Date().getTime()
             };
             localStorage.setItem(userId, JSON.stringify(storedData));
