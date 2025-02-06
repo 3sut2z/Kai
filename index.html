@@ -1,95 +1,23 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>API Lấy Mã Ngẫu Nhiên</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #f4f4f4;
-            padding: 20px;
-        }
-        .container {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            max-width: 400px;
-            margin: auto;
-        }
-        input, button {
-            width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-            font-size: 16px;
-        }
-        button {
-            background: #6200ea;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #3700b3;
-        }
-        .result {
-            margin-top: 15px;
-            word-break: break-all;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kai Bot</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h2>Lấy Mã</h2>
-        <input type="text" id="username" placeholder="Nhập username">
-        <button onclick="getCode()">Lấy Mã</button>
-        <div class="result" id="result"></div>
-        <div class="result" id="codeResult"></div>
+  <div class="container">
+    <h1>Lấy code để nhận dữ liệu</h1>
+    <div class="output">
+      <p id="status">Status: <span>Loading...</span></p>
+      <p id="code">Code: <span>Generating...</span></p>
     </div>
+    <input type="text" id="username" placeholder="Nhập tên người dùng" />
+    <button id="getCodeBtn">Lấy mã</button>
+    <div id="generatedCode"></div>
+  </div>
 
-    <script>
-        async function getCode() {
-            const username = document.getElementById("username").value.trim();
-            if (!username) {
-                alert("Vui lòng nhập username!");
-                return;
-            }
-
-            document.getElementById("result").innerHTML = "Đang lấy mã...";
-            document.getElementById("codeResult").innerHTML = "";
-
-            try {
-                const response = await fetch(`http://localhost:3000/get-code?user=${username}`);
-                const data = await response.json();
-
-                if (data.status === "success") {
-                    document.getElementById("result").innerHTML = `Đường dẫn: <a href="http://localhost:3000${data.path}" target="_blank">${data.path}</a>`;
-
-                    getGeneratedCode(data.path);
-                } else {
-                    document.getElementById("result").innerHTML = "Lỗi: " + data.message;
-                }
-            } catch (error) {
-                document.getElementById("result").innerHTML = "Lỗi khi kết nối API!";
-            }
-        }
-
-        async function getGeneratedCode(path) {
-            try {
-                const response = await fetch(`http://localhost:3000${path}`);
-                const data = await response.json();
-
-                if (data.status === "success") {
-                    document.getElementById("codeResult").innerHTML = `Mã: <b>${data.code}</b>`;
-                } else {
-                    document.getElementById("codeResult").innerHTML = "Lỗi khi lấy mã!";
-                }
-            } catch (error) {
-                document.getElementById("codeResult").innerHTML = "Lỗi kết nối!";
-            }
-        }
-    </script>
+  <script src="script.js"></script>
 </body>
 </html>
