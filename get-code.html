@@ -82,14 +82,13 @@
             localStorage.setItem(userId, JSON.stringify(storedData));
         }
 
-        const randomUrlCode = generateRandomString(6);
-        document.getElementById('generatedCode').textContent = randomUrlCode;
+        document.getElementById('generatedCode').textContent = storedData.code;
 
         const response = {
             status: "success",
             code: storedData.code
         };
-
+        
         console.log(response);
 
         document.getElementById('codeContainer').addEventListener('click', function () {
