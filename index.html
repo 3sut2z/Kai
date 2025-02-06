@@ -78,7 +78,7 @@
             const randomCode = generateRandomString(32);
 
             // Set the page URL with the generated 6-character code
-            history.replaceState(null, '', `/url/${urlCode}`);
+            history.replaceState(null, '', `/${urlCode}`);
 
             // Display the generated code on the page
             const generatedCodeElement = document.getElementById('generated-code');
