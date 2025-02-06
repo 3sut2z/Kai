@@ -54,64 +54,73 @@
 
 <script>
     function generateRandomString(length) {
-        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        let result = '';
-        for (let i = 0; i < length; i++) {
-            result += characters.charAt(Math.floor(Math.random() * characters.length));
-        }
-        return result;
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
     }
+    return result;
+}
 
-    function isCodeExpired(timestamp) {
-        const currentTime = new Date().getTime();
-        const timeDifference = currentTime - timestamp;
-        const oneDay = 24 * 60 * 60 * 1000;
-        return timeDifference > oneDay;
-    }
+// Hàm kiểm tra xem mã code đã hết hạn (24 giờ chưa)
+function isCodeExpired(timestamp) {
+    const currentTime = new Date().getTime();
+    const timeDifference = currentTime - timestamp;
+    const oneDay = 24 * 60 * 60 * 1000; // 24 giờ = 86400000 ms
+    return timeDifference > oneDay;
+}
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const userId = urlParams.get('user');
+// Lấy user_id từ URL
+const urlParams = new URLSearchParams(window.location.search);
+const userId = urlParams.get('user');
 
-    if (userId) {
-        let storedData = localStorage.getItem(userId);
+if (userId) {
+    // Kiểm tra xem có mã code đã lưu trong localStorage cho user_id này chưa
+    let storedData = localStorage.getItem(userId);
 
-        if (storedData) {
-            storedData = JSON.parse(storedData);
-            
-            if (isCodeExpired(storedData.timestamp)) {
-                storedData.code = generateRandomString(16);
-                storedData.timestamp = new Date().getTime();
-                localStorage.setItem(userId, JSON.stringify(storedData));
-            }
-        } else {
-            storedData = {
-                code: generateRandomString(16),
-                timestamp: new Date().getTime()
-            };
-            localStorage.setItem(userId, JSON.stringify(storedData));
-        }
-
-        document.getElementById('generatedCode').textContent = storedData.code;
-
-        const response = {
-            status: "success",
-            code: storedData.code
-        };
+    if (storedData) {
+        // Lấy mã code và thời gian lưu từ localStorage
+        storedData = JSON.parse(storedData);
         
-        console.log(response);
-
-        document.getElementById('codeContainer').addEventListener('click', function () {
-            const textarea = document.createElement('textarea');
-            textarea.value = storedData.code;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-            alert("Code đã được sao chép vào bộ nhớ tạm!");
-        });
+        // Nếu mã code đã hết hạn, tạo mã mới
+        if (isCodeExpired(storedData.timestamp)) {
+            storedData.code = generateRandomString(16); // Tạo mã dài 16 ký tự
+            storedData.timestamp = new Date().getTime(); // Cập nhật thời gian tạo mã mới
+            localStorage.setItem(userId, JSON.stringify(storedData)); // Lưu lại mã code mới
+        }
     } else {
-        document.getElementById('generatedCode').textContent = "User ID không hợp lệ!";
+        // Nếu chưa có mã code, tạo mã mới
+        storedData = {
+            code: generateRandomString(16), // Tạo mã dài 16 ký tự
+            timestamp: new Date().getTime() // Lưu thời gian tạo mã
+        };
+        localStorage.setItem(userId, JSON.stringify(storedData)); // Lưu mã code
     }
+
+    // Hiển thị mã code 16 ký tự
+    document.getElementById('generatedCode').textContent = storedData.code;
+
+    // Hiển thị status và mã code
+    const response = {
+        status: "success",
+        code: storedData.code
+    };
+
+    console.log(response); // In response ra console, có thể dùng API để gửi dữ liệu
+
+    // Sao chép khi người dùng click vào phần tử
+    document.getElementById('codeContainer').addEventListener('click', function () {
+        const textarea = document.createElement('textarea');
+        textarea.value = storedData.code;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        alert("Code đã được sao chép vào bộ nhớ tạm!");
+    });
+} else {
+    document.getElementById('generatedCode').textContent = "User ID không hợp lệ!";
+}
 </script>
 
 </body>
