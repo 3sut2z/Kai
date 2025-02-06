@@ -16,24 +16,33 @@
             text-align: center;
         }
         .code-container {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            max-width: 400px;
-            width: 100%;
-            cursor: pointer;
-        }
-        .code-container p {
-            font-size: 18px;
-            color: #333;
-            margin: 10px 0;
-        }
-        .code-container .generated-code {
-            font-size: 24px;
-            font-weight: bold;
-            color: #007bff;
-        }
+    background-color: #fff;
+    padding: 30px 40px; /* Tăng padding để khung rộng hơn */
+    border-radius: 12px; /* Góc bo tròn lớn hơn */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Tăng độ mờ của shadow */
+    max-width: 500px; /* Tăng chiều rộng tối đa */
+    width: 100%;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Thêm hiệu ứng khi hover */
+}
+
+.code-container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.code-container p {
+    font-size: 20px;
+    color: #555;
+    margin: 12px 0;
+}
+
+.code-container .generated-code {
+    font-size: 28px;
+    font-weight: bold;
+    color: #0066cc;
+    word-wrap: break-word;
+}
     </style>
 </head>
 <body>
