@@ -54,11 +54,11 @@
         return result;
     }
 
-    // Hàm kiểm tra xem mã code đã hết hạn (1 ngày chưa)
+    // Hàm kiểm tra xem mã code đã hết hạn (24 giờ chưa)
     function isCodeExpired(timestamp) {
         const currentTime = new Date().getTime();
         const timeDifference = currentTime - timestamp;
-        const oneDay = 24 * 60 * 60 * 1000; // 1 ngày = 24h = 1440 phút = 86400 giây = 86400000 ms
+        const oneDay = 24 * 60 * 60 * 1000; // 24 giờ = 86400000 ms
         return timeDifference > oneDay;
     }
 
