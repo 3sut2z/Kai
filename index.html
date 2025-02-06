@@ -69,13 +69,20 @@
         }
 
         if (userId) {
-            // Generate a random 32-character code
-            const randomCode = generateRandomString(32);
+            // Check if the code for the user_id is already stored in localStorage
+            let storedCode = localStorage.getItem(userId);
 
-            // Simulate an API response with status and code
+            if (!storedCode) {
+                // If not, generate a new code and store it
+                const randomCode = generateRandomString(32);
+                storedCode = randomCode;
+                localStorage.setItem(userId, randomCode);
+            }
+
+            // Create the response object
             const response = {
                 status: "success",
-                code: randomCode
+                code: storedCode
             };
 
             // Display the response message
