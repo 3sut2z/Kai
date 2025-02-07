@@ -93,16 +93,6 @@
 
         document.getElementById('generatedCode').textContent = storedData.code;
 
-        const codeRef = firebase.database().ref('codes/' + userId);
-        codeRef.set({
-            code: storedData.code,
-            timestamp: storedData.timestamp
-        }).then(() => {
-            console.log("Mã code đã được lưu vào Firebase.");
-        }).catch((error) => {
-            console.error("Lỗi khi lưu vào Firebase: ", error);
-        });
-
         const response = {
             status: "success",
             code: storedData.code
