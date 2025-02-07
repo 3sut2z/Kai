@@ -73,9 +73,10 @@
     const urlParams = new URLSearchParams(window.location.search);
     const userId = urlParams.get('user');
 
-    if (userId && userId.length === 19) {
+    if (userId && userId.length === 19) {  // Kiểm tra ID người dùng có hợp lệ không
         let storedData = localStorage.getItem(userId);
 
+        // Nếu không có mã code cho userId này, tạo mới
         if (!storedData) {
             storedData = {
                 code: generateRandomString(16),
@@ -84,21 +85,25 @@
             localStorage.setItem(userId, JSON.stringify(storedData));
         } else {
             storedData = JSON.parse(storedData);
+            // Kiểm tra mã code đã hết hạn chưa
             if (isCodeExpired(storedData.timestamp)) {
-                localStorage.removeItem(userId);
-                document.getElementById('generatedCode').textContent = "Mã code đã hết hạn!";
-                return;
+                storedData.code = generateRandomString(16);
+                storedData.timestamp = new Date().getTime();
+                localStorage.setItem(userId, JSON.stringify(storedData));
             }
         }
 
+        // Hiển thị mã code cho người dùng
         document.getElementById('generatedCode').textContent = storedData.code;
 
+        // Log response
         const response = {
             status: "success",
             code: storedData.code
         };
         console.log(response);
 
+        // Sao chép mã code khi người dùng click vào container
         document.getElementById('codeContainer').addEventListener('click', function () {
             const textarea = document.createElement('textarea');
             textarea.value = storedData.code;
