@@ -73,23 +73,25 @@
     const urlParams = new URLSearchParams(window.location.search);
     const userId = urlParams.get('user');
 
+    // Kiểm tra ID người dùng có phải là chuỗi dài 19 ký tự không
     if (userId && userId.length === 19) {
         let storedData = localStorage.getItem(userId);
 
-        if (storedData) {
-            storedData = JSON.parse(storedData);
-
-            if (isCodeExpired(storedData.timestamp)) {
-                storedData.code = generateRandomString(16);
-                storedData.timestamp = new Date().getTime();
-                localStorage.setItem(userId, JSON.stringify(storedData));
-            }
-        } else {
+        // Nếu không có dữ liệu cho userId, tạo mã code mới
+        if (!storedData) {
             storedData = {
                 code: generateRandomString(16),
                 timestamp: new Date().getTime()
             };
             localStorage.setItem(userId, JSON.stringify(storedData));
+        } else {
+            storedData = JSON.parse(storedData);
+            // Kiểm tra nếu mã code đã hết hạn
+            if (isCodeExpired(storedData.timestamp)) {
+                storedData.code = generateRandomString(16);
+                storedData.timestamp = new Date().getTime();
+                localStorage.setItem(userId, JSON.stringify(storedData));
+            }
         }
 
         document.getElementById('generatedCode').textContent = storedData.code;
