@@ -65,9 +65,8 @@
 
     function isCodeExpired(timestamp) {
         const currentTime = new Date().getTime();
-        const timeDifference = currentTime - timestamp;
-        const oneDay = 24 * 60 * 60 * 1000;
-        return timeDifference > oneDay;
+        const oneDay = 24 * 60 * 60 * 1000; // 24 giờ
+        return (currentTime - timestamp) > oneDay;
     }
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -76,28 +75,26 @@
     if (userId && userId.length === 19) {
         let storedData = localStorage.getItem(userId);
 
-        if (!storedData) {
+        if (storedData) {
+            storedData = JSON.parse(storedData);
+
+            if (isCodeExpired(storedData.timestamp)) {
+                // Nếu mã đã hết hạn, tạo mã mới và cập nhật timestamp
+                storedData.code = generateRandomString(16);
+                storedData.timestamp = new Date().getTime();
+                localStorage.setItem(userId, JSON.stringify(storedData));
+            }
+        } else {
+            // Nếu chưa có mã cho userId, tạo mới
             storedData = {
                 code: generateRandomString(16),
                 timestamp: new Date().getTime()
             };
             localStorage.setItem(userId, JSON.stringify(storedData));
-        } else {
-            storedData = JSON.parse(storedData);
-            if (isCodeExpired(storedData.timestamp)) {
-                storedData.code = generateRandomString(16);
-                storedData.timestamp = new Date().getTime();
-                localStorage.setItem(userId, JSON.stringify(storedData));
-            }
         }
 
+        // Hiển thị mã lên trang
         document.getElementById('generatedCode').textContent = storedData.code;
-
-        const response = {
-            status: "success",
-            code: storedData.code
-        };
-        console.log(response);
 
         document.getElementById('codeContainer').addEventListener('click', function () {
             const textarea = document.createElement('textarea');
@@ -108,6 +105,8 @@
             document.body.removeChild(textarea);
             alert("Code đã được sao chép vào bộ nhớ tạm!");
         });
+
+        console.log({ status: "success", code: storedData.code });
     } else {
         document.getElementById('generatedCode').textContent = "User ID không hợp lệ!";
     }
