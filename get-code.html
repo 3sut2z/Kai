@@ -54,6 +54,19 @@
 </div>
 
 <script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyBXVJp50mN6kzm7LT0H1TBdQmPie8l6TOo",
+        authDomain: "kai-bot---get-code.firebaseapp.com",
+        projectId: "kai-bot---get-code",
+        storageBucket: "kai-bot---get-code.appspot.com",
+        messagingSenderId: "944776263204",
+        appId: "1:944776263204:web:878007637128146ed70ab1",
+        measurementId: "G-CZ4GKJYSG3"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
     function generateRandomString(length) {
         const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         let result = '';
@@ -64,34 +77,45 @@
     }
 
     function isCodeExpired(timestamp) {
-        const currentTime = new Date().getTime();
         const oneDay = 24 * 60 * 60 * 1000;
-        return (currentTime - timestamp) > oneDay;
+        return (new Date().getTime() - timestamp) > oneDay;
+    }
+
+    async function fetchCode(userId) {
+        const userRef = db.collection("users").doc(userId);
+        const doc = await userRef.get();
+
+        let codeData;
+        if (doc.exists) {
+            codeData = doc.data();
+            if (isCodeExpired(codeData.timestamp)) {
+                codeData.code = generateRandomString(16);
+                codeData.timestamp = new Date().getTime();
+                await userRef.set(codeData);
+            }
+        } else {
+            codeData = {
+                code: generateRandomString(16),
+                timestamp: new Date().getTime()
+            };
+            await userRef.set(codeData);
+        }
+
+        return codeData.code;
     }
 
     const urlParams = new URLSearchParams(window.location.search);
     const userId = urlParams.get('user');
 
     if (userId && userId.length === 19) {
-        let storedData = localStorage.getItem(userId);
-        let codeData = storedData ? JSON.parse(storedData) : null;
+        fetchCode(userId).then(code => {
+            document.getElementById('generatedCode').textContent = code;
 
-        if (!codeData || isCodeExpired(codeData.timestamp)) {
-            codeData = {
-                code: generateRandomString(16),
-                timestamp: new Date().getTime()
-            };
-            localStorage.setItem(userId, JSON.stringify(codeData));
-        }
-
-        document.getElementById('generatedCode').textContent = codeData.code;
-
-        console.log({ status: "success", code: codeData.code });
-
-        document.getElementById('codeContainer').addEventListener('click', function () {
-            navigator.clipboard.writeText(codeData.code).then(() => {
-                alert("Code đã được sao chép vào bộ nhớ tạm!");
-            }).catch(err => console.error("Lỗi khi sao chép: ", err));
+            document.getElementById('codeContainer').addEventListener('click', function () {
+                navigator.clipboard.writeText(code).then(() => {
+                    alert("Code đã được sao chép vào bộ nhớ tạm!");
+                }).catch(err => console.error("Lỗi khi sao chép: ", err));
+            });
         });
     } else {
         document.getElementById('generatedCode').textContent = "User ID không hợp lệ!";
