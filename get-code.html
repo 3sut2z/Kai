@@ -7,8 +7,77 @@
     <link rel="icon" href="https://media.discordapp.net/attachments/1319244074347266122/1337064150811283547/Kai.png?ex=67a61587&is=67a4c407&hm=25ee7cf75f7b925cefdf0ce8577e005f6f4f75a5e57b6f75fe6755421041109f&=&format=webp&quality=lossless" type="image/png">
     
     <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-database.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.2/firebase-app.js";
+        import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/9.17.2/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        function generateRandomString(length) {
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * characters.length));
+            }
+            return result;
+        }
+
+        function isCodeExpired(timestamp) {
+            const currentTime = new Date().getTime();
+            const oneDay = 24 * 60 * 60 * 1000;
+            return (currentTime - timestamp) > oneDay;
+        }
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const userId = urlParams.get('user');
+
+            if (!userId || userId.length !== 19) {
+                document.getElementById('generatedCode').textContent = "User ID không hợp lệ!";
+                return;
+            }
+
+            const codeRef = ref(database, 'codes/' + userId);
+
+            try {
+                const snapshot = await get(child(ref(database), 'codes/' + userId));
+                let storedData = snapshot.exists() ? snapshot.val() : null;
+
+                if (!storedData || isCodeExpired(storedData.timestamp)) {
+                    storedData = {
+                        code: generateRandomString(16),
+                        timestamp: new Date().getTime()
+                    };
+                    await set(codeRef, storedData);
+                    console.log("Mã code mới đã được lưu vào Firebase.");
+                } else {
+                    console.log("Mã code đã tồn tại, không cần tạo lại.");
+                }
+
+                document.getElementById('generatedCode').textContent = storedData.code;
+
+                document.getElementById('codeContainer').addEventListener('click', () => {
+                    navigator.clipboard.writeText(storedData.code).then(() => {
+                        alert("Code đã được sao chép vào bộ nhớ tạm!");
+                    }).catch(err => console.error("Lỗi khi sao chép:", err));
+                });
+
+            } catch (error) {
+                console.error("Lỗi khi truy xuất Firebase:", error);
+            }
+        });
+    </script>
 
     <style>
         body {
@@ -57,90 +126,6 @@
     <p>Click anywhere to copy the code!</p>
     <p class="generated-code" id="generatedCode">Loading...</p>
 </div>
-
-<script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyBXVJp50mN6kzm7LT0H1TBdQmPie8l6TOo",
-        authDomain: "kai-bot---get-code.firebaseapp.com",
-        projectId: "kai-bot---get-code",
-        storageBucket: "kai-bot---get-code.firebasestorage.app",
-        messagingSenderId: "944776263204",
-        appId: "1:944776263204:web:878007637128146ed70ab1",
-        measurementId: "G-CZ4GKJYSG3"
-    };
-
-    const app = firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
-
-    function generateRandomString(length) {
-        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        let result = '';
-        for (let i = 0; i < length; i++) {
-            result += characters.charAt(Math.floor(Math.random() * characters.length));
-        }
-        return result;
-    }
-
-    function isCodeExpired(timestamp) {
-        const currentTime = new Date().getTime();
-        const timeDifference = currentTime - timestamp;
-        const oneDay = 24 * 60 * 60 * 1000;
-        return timeDifference > oneDay;
-    }
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const userId = urlParams.get('user');
-
-    if (userId && userId.length === 19) {
-        let storedData = localStorage.getItem(userId);
-
-        if (!storedData) {
-            storedData = {
-                code: generateRandomString(16),
-                timestamp: new Date().getTime()
-            };
-            localStorage.setItem(userId, JSON.stringify(storedData));
-        } else {
-            storedData = JSON.parse(storedData);
-            if (isCodeExpired(storedData.timestamp)) {
-                storedData.code = generateRandomString(16);
-                storedData.timestamp = new Date().getTime();
-                localStorage.setItem(userId, JSON.stringify(storedData));
-            }
-        }
-
-        document.getElementById('generatedCode').textContent = storedData.code;
-
-        // Lưu mã code vào Firebase
-        const codeRef = database.ref('codes/' + userId);  // Lưu theo userId
-        codeRef.set({
-            code: storedData.code,
-            timestamp: storedData.timestamp
-        }).then(() => {
-            console.log("Mã code đã được lưu vào Firebase.");
-        }).catch((error) => {
-            console.error("Lỗi khi lưu vào Firebase: ", error);
-        });
-
-        const response = {
-            status: "success",
-            code: storedData.code
-        };
-        console.log(response);
-
-        document.getElementById('codeContainer').addEventListener('click', function () {
-            const textarea = document.createElement('textarea');
-            textarea.value = storedData.code;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-            alert("Code đã được sao chép vào bộ nhớ tạm!");
-        });
-    } else {
-        document.getElementById('generatedCode').textContent = "User ID không hợp lệ!";
-    }
-</script>
 
 </body>
 </html>
