@@ -63,53 +63,44 @@
     return result;
 }
 
-// Hàm kiểm tra xem mã code đã hết hạn (24 giờ chưa)
 function isCodeExpired(timestamp) {
     const currentTime = new Date().getTime();
     const timeDifference = currentTime - timestamp;
-    const oneDay = 24 * 60 * 60 * 1000; // 24 giờ = 86400000 ms
+    const oneDay = 24 * 60 * 60 * 1000;
     return timeDifference > oneDay;
 }
 
-// Lấy user_id từ URL
 const urlParams = new URLSearchParams(window.location.search);
 const userId = urlParams.get('user');
 
-if (userId) {
-    // Kiểm tra xem có mã code đã lưu trong localStorage cho user_id này chưa
+if (window.location.pathname.includes("/get-code") && userId) {
     let storedData = localStorage.getItem(userId);
 
     if (storedData) {
-        // Lấy mã code và thời gian lưu từ localStorage
         storedData = JSON.parse(storedData);
         
-        // Nếu mã code đã hết hạn, tạo mã mới
         if (isCodeExpired(storedData.timestamp)) {
-            storedData.code = generateRandomString(16); // Tạo mã dài 16 ký tự
-            storedData.timestamp = new Date().getTime(); // Cập nhật thời gian tạo mã mới
-            localStorage.setItem(userId, JSON.stringify(storedData)); // Lưu lại mã code mới
+            storedData.code = generateRandomString(16);
+            storedData.timestamp = new Date().getTime();
+            localStorage.setItem(userId, JSON.stringify(storedData));
         }
     } else {
-        // Nếu chưa có mã code, tạo mã mới
         storedData = {
-            code: generateRandomString(16), // Tạo mã dài 16 ký tự
-            timestamp: new Date().getTime() // Lưu thời gian tạo mã
+            code: generateRandomString(16),
+            timestamp: new Date().getTime()
         };
-        localStorage.setItem(userId, JSON.stringify(storedData)); // Lưu mã code
+        localStorage.setItem(userId, JSON.stringify(storedData));
     }
 
-    // Hiển thị mã code 16 ký tự
     document.getElementById('generatedCode').textContent = storedData.code;
 
-    // Hiển thị status và mã code
     const response = {
         status: "success",
         code: storedData.code
     };
 
-    console.log(response); // In response ra console, có thể dùng API để gửi dữ liệu
+    console.log(response);
 
-    // Sao chép khi người dùng click vào phần tử
     document.getElementById('codeContainer').addEventListener('click', function () {
         const textarea = document.createElement('textarea');
         textarea.value = storedData.code;
