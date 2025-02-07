@@ -65,7 +65,7 @@
 
     function isCodeExpired(timestamp) {
         const currentTime = new Date().getTime();
-        const oneDay = 24 * 60 * 60 * 1000; // 24 giờ
+        const oneDay = 24 * 60 * 60 * 1000;
         return (currentTime - timestamp) > oneDay;
     }
 
@@ -74,39 +74,25 @@
 
     if (userId && userId.length === 19) {
         let storedData = localStorage.getItem(userId);
+        let codeData = storedData ? JSON.parse(storedData) : null;
 
-        if (storedData) {
-            storedData = JSON.parse(storedData);
-
-            if (isCodeExpired(storedData.timestamp)) {
-                // Nếu mã đã hết hạn, tạo mã mới và cập nhật timestamp
-                storedData.code = generateRandomString(16);
-                storedData.timestamp = new Date().getTime();
-                localStorage.setItem(userId, JSON.stringify(storedData));
-            }
-        } else {
-            // Nếu chưa có mã cho userId, tạo mới
-            storedData = {
+        if (!codeData || isCodeExpired(codeData.timestamp)) {
+            codeData = {
                 code: generateRandomString(16),
                 timestamp: new Date().getTime()
             };
-            localStorage.setItem(userId, JSON.stringify(storedData));
+            localStorage.setItem(userId, JSON.stringify(codeData));
         }
 
-        // Hiển thị mã lên trang
-        document.getElementById('generatedCode').textContent = storedData.code;
+        document.getElementById('generatedCode').textContent = codeData.code;
+
+        console.log({ status: "success", code: codeData.code });
 
         document.getElementById('codeContainer').addEventListener('click', function () {
-            const textarea = document.createElement('textarea');
-            textarea.value = storedData.code;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-            alert("Code đã được sao chép vào bộ nhớ tạm!");
+            navigator.clipboard.writeText(codeData.code).then(() => {
+                alert("Code đã được sao chép vào bộ nhớ tạm!");
+            }).catch(err => console.error("Lỗi khi sao chép: ", err));
         });
-
-        console.log({ status: "success", code: storedData.code });
     } else {
         document.getElementById('generatedCode').textContent = "User ID không hợp lệ!";
     }
