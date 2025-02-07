@@ -85,9 +85,9 @@
         } else {
             storedData = JSON.parse(storedData);
             if (isCodeExpired(storedData.timestamp)) {
-                storedData.code = generateRandomString(16);
-                storedData.timestamp = new Date().getTime();
-                localStorage.setItem(userId, JSON.stringify(storedData));
+                localStorage.removeItem(userId);
+                document.getElementById('generatedCode').textContent = "Mã code đã hết hạn!";
+                return;
             }
         }
 
