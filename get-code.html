@@ -73,7 +73,7 @@
     const urlParams = new URLSearchParams(window.location.search);
     const userId = urlParams.get('user');
 
-    if (window.location.pathname.includes("/get-code") && userId) {
+    if (userId && userId.length === 19) {
         let storedData = localStorage.getItem(userId);
 
         if (storedData) {
@@ -111,7 +111,7 @@
             alert("Code đã được sao chép vào bộ nhớ tạm!");
         });
     } else {
-        document.getElementById('generatedCode').textContent = "User ID không hợp lệ!";
+        document.getElementById('generatedCode').textContent = "User ID không hợp lệ! ID phải có 19 ký tự.";
     }
 </script>
 
