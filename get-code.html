@@ -73,10 +73,9 @@
     const urlParams = new URLSearchParams(window.location.search);
     const userId = urlParams.get('user');
 
-    if (userId && userId.length === 19) {  // Kiểm tra ID người dùng có hợp lệ không
+    if (userId && userId.length === 19) {
         let storedData = localStorage.getItem(userId);
 
-        // Kiểm tra nếu chưa có code cho userId này
         if (!storedData) {
             storedData = {
                 code: generateRandomString(16),
@@ -85,7 +84,6 @@
             localStorage.setItem(userId, JSON.stringify(storedData));
         } else {
             storedData = JSON.parse(storedData);
-            // Nếu mã code đã hết hạn, tạo mã code mới và cập nhật lại timestamp
             if (isCodeExpired(storedData.timestamp)) {
                 storedData.code = generateRandomString(16);
                 storedData.timestamp = new Date().getTime();
@@ -93,36 +91,24 @@
             }
         }
 
-        // Hiển thị mã code cho người dùng
         document.getElementById('generatedCode').textContent = storedData.code;
 
-        // Log response
+        const codeRef = firebase.database().ref('codes/' + userId);
+        codeRef.set({
+            code: storedData.code,
+            timestamp: storedData.timestamp
+        }).then(() => {
+            console.log("Mã code đã được lưu vào Firebase.");
+        }).catch((error) => {
+            console.error("Lỗi khi lưu vào Firebase: ", error);
+        });
+
         const response = {
             status: "success",
             code: storedData.code
         };
         console.log(response);
 
-        // Gửi mã code và userId lên server để lưu vào file
-        fetch('http://localhost:3000/saveCode', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                userId: userId,
-                code: storedData.code
-            })
-        })
-        .then(response => response.text())
-        .then(data => {
-            console.log(data);  // Thông báo khi dữ liệu đã được lưu
-        })
-        .catch(error => {
-            console.error('Lỗi:', error);
-        });
-
-        // Sao chép mã code khi người dùng click vào container
         document.getElementById('codeContainer').addEventListener('click', function () {
             const textarea = document.createElement('textarea');
             textarea.value = storedData.code;
@@ -133,7 +119,7 @@
             alert("Code đã được sao chép vào bộ nhớ tạm!");
         });
     } else {
-        document.getElementById('generatedCode').textContent = "User ID không hợp lệ! ID phải có 19 ký tự.";
+        document.getElementById('generatedCode').textContent = "User ID không hợp lệ!";
     }
 </script>
 
