@@ -103,6 +103,25 @@
         };
         console.log(response);
 
+        // Gửi mã code và userId lên server để lưu vào file
+        fetch('http://localhost:3000/saveCode', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                userId: userId,
+                code: storedData.code
+            })
+        })
+        .then(response => response.text())
+        .then(data => {
+            console.log(data);  // Thông báo khi dữ liệu đã được lưu
+        })
+        .catch(error => {
+            console.error('Lỗi:', error);
+        });
+
         // Sao chép mã code khi người dùng click vào container
         document.getElementById('codeContainer').addEventListener('click', function () {
             const textarea = document.createElement('textarea');
@@ -114,7 +133,7 @@
             alert("Code đã được sao chép vào bộ nhớ tạm!");
         });
     } else {
-        document.getElementById('generatedCode').textContent = "User ID không hợp lệ!";
+        document.getElementById('generatedCode').textContent = "User ID không hợp lệ! ID phải có 19 ký tự.";
     }
 </script>
 
