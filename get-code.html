@@ -76,7 +76,7 @@
     if (userId && userId.length === 19) {  // Kiểm tra ID người dùng có hợp lệ không
         let storedData = localStorage.getItem(userId);
 
-        // Nếu không có mã code cho userId này, tạo mới và lưu
+        // Kiểm tra nếu chưa có code cho userId này
         if (!storedData) {
             storedData = {
                 code: generateRandomString(16),
@@ -85,9 +85,8 @@
             localStorage.setItem(userId, JSON.stringify(storedData));
         } else {
             storedData = JSON.parse(storedData);
-            // Kiểm tra mã code đã hết hạn chưa
+            // Nếu mã code đã hết hạn, tạo mã code mới và cập nhật lại timestamp
             if (isCodeExpired(storedData.timestamp)) {
-                // Nếu hết hạn, tạo mã code mới và cập nhật timestamp
                 storedData.code = generateRandomString(16);
                 storedData.timestamp = new Date().getTime();
                 localStorage.setItem(userId, JSON.stringify(storedData));
