@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kai BOT - Get Code</title>
     <link rel="icon" href="https://media.discordapp.net/attachments/1319244074347266122/1337064150811283547/Kai.png?ex=67a61587&is=67a4c407&hm=25ee7cf75f7b925cefdf0ce8577e005f6f4f75a5e57b6f75fe6755421041109f&=&format=webp&quality=lossless" type="image/png">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-database.js"></script>
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -54,6 +59,19 @@
 </div>
 
 <script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyBXVJp50mN6kzm7LT0H1TBdQmPie8l6TOo",
+        authDomain: "kai-bot---get-code.firebaseapp.com",
+        projectId: "kai-bot---get-code",
+        storageBucket: "kai-bot---get-code.firebasestorage.app",
+        messagingSenderId: "944776263204",
+        appId: "1:944776263204:web:878007637128146ed70ab1",
+        measurementId: "G-CZ4GKJYSG3"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
     function generateRandomString(length) {
         const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         let result = '';
@@ -92,6 +110,17 @@
         }
 
         document.getElementById('generatedCode').textContent = storedData.code;
+
+        // Lưu mã code vào Firebase
+        const codeRef = database.ref('codes/' + userId);  // Lưu theo userId
+        codeRef.set({
+            code: storedData.code,
+            timestamp: storedData.timestamp
+        }).then(() => {
+            console.log("Mã code đã được lưu vào Firebase.");
+        }).catch((error) => {
+            console.error("Lỗi khi lưu vào Firebase: ", error);
+        });
 
         const response = {
             status: "success",
