@@ -76,7 +76,7 @@
     if (userId && userId.length === 19) {  // Kiểm tra ID người dùng có hợp lệ không
         let storedData = localStorage.getItem(userId);
 
-        // Nếu không có mã code cho userId này, tạo mới
+        // Nếu không có mã code cho userId này, tạo mới và lưu
         if (!storedData) {
             storedData = {
                 code: generateRandomString(16),
@@ -87,6 +87,7 @@
             storedData = JSON.parse(storedData);
             // Kiểm tra mã code đã hết hạn chưa
             if (isCodeExpired(storedData.timestamp)) {
+                // Nếu hết hạn, tạo mã code mới và cập nhật timestamp
                 storedData.code = generateRandomString(16);
                 storedData.timestamp = new Date().getTime();
                 localStorage.setItem(userId, JSON.stringify(storedData));
@@ -114,7 +115,7 @@
             alert("Code đã được sao chép vào bộ nhớ tạm!");
         });
     } else {
-        document.getElementById('generatedCode').textContent = "User ID không hợp lệ! ID phải có 19 ký tự.";
+        document.getElementById('generatedCode').textContent = "User ID không hợp lệ!";
     }
 </script>
 
