@@ -54,78 +54,63 @@
 </div>
 
 <script>
-    // Firebase SDK v9+
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js';
-import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js';
-
-// Khởi tạo Firebase
-const firebaseConfig = {
-    apiKey: "AIzaSyBXVJp50mN6kzm7LT0H1TBdQmPie8l6TOo",
-    authDomain: "kai-bot---get-code.firebaseapp.com",
-    projectId: "kai-bot---get-code",
-    storageBucket: "kai-bot---get-code.appspot.com",
-    messagingSenderId: "944776263204",
-    appId: "1:944776263204:web:878007637128146ed70ab1",
-    measurementId: "G-CZ4GKJYSG3"
-};
-
-// Khởi tạo Firebase App
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-function generateRandomString(length) {
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < length; i++) {
-        result += characters.charAt(Math.floor(Math.random() * characters.length));
-    }
-    return result;
-}
-
-function isCodeExpired(timestamp) {
-    const oneDay = 24 * 60 * 60 * 1000;
-    return (new Date().getTime() - timestamp) > oneDay;
-}
-
-async function fetchCode(userId) {
-    const userRef = doc(db, "users", userId);
-    const docSnap = await getDoc(userRef);
-
-    let codeData;
-    if (docSnap.exists()) {
-        codeData = docSnap.data();
-        if (isCodeExpired(codeData.timestamp)) {
-            codeData.code = generateRandomString(16);
-            codeData.timestamp = new Date().getTime();
-            await setDoc(userRef, codeData);
+    function generateRandomString(length) {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            result += characters.charAt(Math.floor(Math.random() * characters.length));
         }
-    } else {
-        codeData = {
-            code: generateRandomString(16),
-            timestamp: new Date().getTime()
-        };
-        await setDoc(userRef, codeData);
+        return result;
     }
 
-    return codeData.code;
-}
+    function isCodeExpired(timestamp) {
+        const currentTime = new Date().getTime();
+        const timeDifference = currentTime - timestamp;
+        const oneDay = 24 * 60 * 60 * 1000;
+        return timeDifference > oneDay;
+    }
 
-const urlParams = new URLSearchParams(window.location.search);
-const userId = urlParams.get('user');
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('user');
 
-if (userId && userId.length === 19) {
-    fetchCode(userId).then(code => {
-        document.getElementById('generatedCode').textContent = code;
+    if (userId && userId.length === 19) {
+        let storedData = localStorage.getItem(userId);
+
+        if (!storedData) {
+            storedData = {
+                code: generateRandomString(16),
+                timestamp: new Date().getTime()
+            };
+            localStorage.setItem(userId, JSON.stringify(storedData));
+        } else {
+            storedData = JSON.parse(storedData);
+            if (isCodeExpired(storedData.timestamp)) {
+                storedData.code = generateRandomString(16);
+                storedData.timestamp = new Date().getTime();
+                localStorage.setItem(userId, JSON.stringify(storedData));
+            }
+        }
+
+        document.getElementById('generatedCode').textContent = storedData.code;
+
+        const response = {
+            status: "success",
+            code: storedData.code
+        };
+        console.log(response);
 
         document.getElementById('codeContainer').addEventListener('click', function () {
-            navigator.clipboard.writeText(code).then(() => {
-                alert("Code đã được sao chép vào bộ nhớ tạm!");
-            }).catch(err => console.error("Lỗi khi sao chép: ", err));
+            const textarea = document.createElement('textarea');
+            textarea.value = storedData.code;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            alert("Code đã được sao chép vào bộ nhớ tạm!");
         });
-    });
-} else {
-    document.getElementById('generatedCode').textContent = "User ID không hợp lệ!";
-}
+    } else {
+        document.getElementById('generatedCode').textContent = "User ID không hợp lệ!";
+    }
 </script>
 
 </body>
