@@ -53,25 +53,23 @@
     <p class="generated-code" id="generatedCode">Loading...</p>
 </div>
 
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
-<script>
-    import { initializeApp } from "firebase/app";
-    import { getDatabase, ref, set, get } from "firebase/database";
-    
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
+    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-database.js";
+
     const firebaseConfig = {
         apiKey: "AIzaSyBXVJp50mN6kzm7LT0H1TBdQmPie8l6TOo",
         authDomain: "kai-bot---get-code.firebaseapp.com",
+        databaseURL: "https://kai-bot---get-code-default-rtdb.firebaseio.com/",
         projectId: "kai-bot---get-code",
-        storageBucket: "kai-bot---get-code.firebasestorage.app",
+        storageBucket: "kai-bot---get-code.appspot.com",
         messagingSenderId: "944776263204",
         appId: "1:944776263204:web:878007637128146ed70ab1",
         measurementId: "G-CZ4GKJYSG3"
     };
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
     function generateRandomString(length) {
         const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -85,42 +83,34 @@
     function isCodeExpired(timestamp) {
         const currentTime = new Date().getTime();
         const oneDay = 24 * 60 * 60 * 1000;
-        return currentTime - timestamp > oneDay;
+        return (currentTime - timestamp) > oneDay;
     }
 
     const urlParams = new URLSearchParams(window.location.search);
     const userId = urlParams.get('user');
 
     if (userId && userId.length === 19) {
-        const userRef = firebase.database().ref("users/" + userId);
+        const userRef = ref(db, "users/" + userId);
 
-        userRef.once("value").then(snapshot => {
-            let data = snapshot.val();
+        get(userRef).then((snapshot) => {
+            let storedData = snapshot.val();
 
-            if (!data || isCodeExpired(data.timestamp)) {
-                const newCode = generateRandomString(16);
-                const timestamp = new Date().getTime();
-
-                userRef.set({ code: newCode, timestamp: timestamp });
-
-                document.getElementById('generatedCode').textContent = newCode;
-            } else {
-                document.getElementById('generatedCode').textContent = data.code;
+            if (!storedData || isCodeExpired(storedData.timestamp)) {
+                storedData = {
+                    code: generateRandomString(16),
+                    timestamp: new Date().getTime()
+                };
+                set(userRef, storedData);
             }
-        });
 
-        document.getElementById('codeContainer').addEventListener('click', function () {
-            const code = document.getElementById('generatedCode').textContent;
-            if (code !== "Loading...") {
-                const textarea = document.createElement('textarea');
-                textarea.value = code;
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
-                alert("Code đã được sao chép vào bộ nhớ tạm!");
-            }
-        });
+            document.getElementById('generatedCode').textContent = storedData.code;
+            
+            document.getElementById('codeContainer').addEventListener('click', () => {
+                navigator.clipboard.writeText(storedData.code).then(() => {
+                    alert("Code đã được sao chép vào bộ nhớ tạm!");
+                }).catch(err => console.error("Lỗi khi sao chép: ", err));
+            });
+        }).catch(error => console.error("Lỗi khi lấy dữ liệu Firebase:", error));
     } else {
         document.getElementById('generatedCode').textContent = "User ID không hợp lệ!";
     }
