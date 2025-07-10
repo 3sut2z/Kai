@@ -1,70 +1,37 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f0f0f0;
-      padding: 50px;
+      margin: 0;
       display: flex;
-      flex-direction: column;
+      justify-content: center;
       align-items: center;
-    }
-
-    h1 {
-      color: #333;
-    }
-
-    #output {
-      margin-top: 20px;
-      padding: 10px 20px;
-      font-size: 18px;
-      background-color: #fff;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      min-height: 40px;
-      word-wrap: break-word;
-      width: 80%;
-      max-width: 500px;
-      text-align: center;
-    }
-
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-      background: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      margin-top: 20px;
-    }
-
-    button:hover {
-      background: #45a049;
+      height: 100vh;
+      background: #f9f9f9;
+      font-family: monospace;
+      font-size: 1.5rem;
+      color: #222;
+      user-select: all;
     }
   </style>
 </head>
 <body>
-  <button onclick="generateRandomString()">Tạo Chuỗi</button>
   <div id="output"></div>
 
   <script>
-    function generateRandomString() {
-      const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,.<>?';
-      const minLen = 8;
-      const maxLen = 32;
-      const length = Math.floor(Math.random() * (maxLen - minLen + 1)) + minLen;
-
-      let result = '';
+    (function() {
+      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+[]{}|;:,.<>?";
+      const minLength = 8;
+      const maxLength = 32;
+      const length = Math.floor(Math.random() * (maxLength - minLength + 1)) + minLength;
+      let str = "";
       for (let i = 0; i < length; i++) {
-        const randomIndex = Math.floor(Math.random() * characters.length);
-        result += characters[randomIndex];
+        str += chars.charAt(Math.floor(Math.random() * chars.length));
       }
-
-      document.getElementById('output').textContent = result;
-    }
+      document.getElementById("output").textContent = str;
+    })();
   </script>
 </body>
 </html>
