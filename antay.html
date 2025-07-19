@@ -7,7 +7,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.3.0/firebase-database-compat.js"></script>
   <style>
     body { font-family: monospace; background: #f4f4f4; padding: 20px; }
-    pre { background: #fff; padding: 16px; border-radius: 6px; border: 1px solid #ccc; }
   </style>
 </head>
 <body>
@@ -20,6 +19,9 @@
 
     showJSON("success", "Loading...", getElapsed());
 
+    import { initializeApp } from "firebase/app";
+    import { getAnalytics } from "firebase/analytics";
+
     const firebaseConfig = {
       apiKey: "AIzaSyBXVJp50mN6kzm7LT0H1TBdQmPie8l6TOo",
       authDomain: "kai-bot---get-code.firebaseapp.com",
@@ -30,6 +32,9 @@
       appId: "1:944776263204:web:878007637128146ed70ab1",
       measurementId: "G-CZ4GKJYSG3"
     };
+
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
