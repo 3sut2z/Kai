@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>HWID to Key API</title>
+  <script src="https://www.gstatic.com/firebasejs/10.3.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.3.0/firebase-database-compat.js"></script>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; }
+    input, button { padding: 10px; margin: 5px 0; width: 100%; }
+    pre { background: #f0f0f0; padding: 10px; border-radius: 5px; }
+  </style>
+</head>
+<body>
+
+  <h2>HWID to Key Generator</h2>
+  <input type="text" id="hwid" placeholder="Enter your HWID" />
+  <button onclick="getKey()">Get Key</button>
+
+  <h3>Response:</h3>
+  <pre id="result">Waiting for input...</pre>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      databaseURL: "YOUR_DATABASE_URL",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_MSG_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    async function getKey() {
+      const hwid = document.getElementById('hwid').value.trim();
+      const resultBox = document.getElementById('result');
+
+      if (!hwid) {
+        resultBox.textContent = "❌ Please enter a HWID.";
+        return;
+      }
+
+      try {
+        const ref = db.ref('hwids/' + encodeURIComponent(hwid));
+        const snapshot = await ref.once('value');
+
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          resultBox.textContent = `✅ [From Firebase]\nKey: ${data.key}\nTime: ${data.time}`;
+          return;
+        }
+
+        const res = await fetch(`http://localhost:3000/?hwid=${encodeURIComponent(hwid)}`);
+        const data = await res.json();
+
+        if (data.status === 'success') {
+          const key = data.result;
+          const now = new Date().toISOString();
+
+          await ref.set({
+            key: key,
+            time: now
+          });
+
+          resultBox.textContent = `✅ [New Key Created]\nKey: ${key}\nTime: ${now}`;
+        } else {
+          resultBox.textContent = `❌ Error: ${data.result}`;
+        }
+      } catch (err) {
+        resultBox.textContent = `❌ Exception: ${err.message}`;
+      }
+    }
+  </script>
+</body>
+</html>
