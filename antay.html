@@ -11,11 +11,24 @@
 </head>
 <body>
 
-  <p id="output"></p>
+  <pre id="output"></pre>
 
   <script>
     const startTime = performance.now();
     const outputElement = document.getElementById("output");
+
+    function getElapsed() {
+      return (performance.now() - startTime).toFixed(2) + "ms";
+    }
+
+    function showJSON(status, result, timeTaken) {
+      const json = {
+        status,
+        result,
+        "time-taken": timeTaken
+      };
+      outputElement.textContent = JSON.stringify(json, null, 2);
+    }
 
     showJSON("success", "Loading...", getElapsed());
 
@@ -35,47 +48,44 @@
     const params = new URLSearchParams(window.location.search);
     const hwid = params.get("hwid");
 
-    if (!hwid) {
-      return showJSON("error", "Missing hwid parameter", getElapsed());
-    }
-    
     const hwidPattern = /^[a-zA-Z0-9]{5}-[a-zA-Z0-9]{5}-[a-zA-Z0-9]{5}$/;
-    if (!hwidPattern.test(hwid)) {
-      return showJSON("error", "Invalid hwid format", getElapsed());
+
+    if (!hwid) {
+      showJSON("error", "Missing hwid parameter", getElapsed());
+    } else if (!hwidPattern.test(hwid)) {
+      showJSON("error", "Invalid hwid format", getElapsed());
+    } else {
+      const hwidPath = 'hwids/' + encodeURIComponent(hwid);
+      const ref = db.ref(hwidPath);
+      const now = Date.now();
+
+      ref.once('value')
+        .then(snapshot => {
+          if (snapshot.exists()) {
+            const data = snapshot.val();
+            const createdAt = data.createdAt || 0;
+
+            if (now - createdAt >= 24 * 60 * 60 * 1000) {
+              ref.remove()
+                .then(() => generateAndSaveKey(hwidPath))
+                .catch(err => showJSON("error", "Failed to delete expired key: " + err.message, getElapsed()));
+            } else {
+              showJSON("success", data.key, getElapsed());
+            }
+          } else {
+            generateAndSaveKey(hwidPath);
+          }
+        })
+        .catch(err => {
+          showJSON("error", "Firebase error: " + err.message, getElapsed());
+        });
     }
 
-    const hwidPath = 'hwids/' + encodeURIComponent(hwid);
-    const ref = db.ref(hwidPath);
-
-    ref.once('value')
-      .then(snapshot => {
-        const now = Date.now();
-
-        if (snapshot.exists()) {
-          const data = snapshot.val();
-          const createdAt = data.createdAt || 0;
-
-          if (now - createdAt >= 24 * 60 * 60 * 1000) {
-            ref.remove().then(() => {
-              generateAndSaveKey();
-            }).catch(err => {
-              showJSON("error", "Failed to delete expired key: " + err.message, getElapsed());
-            });
-          } else {
-            showJSON("success", data.key, getElapsed());
-          }
-        } else {
-          generateAndSaveKey();
-        }
-      })
-      .catch(err => {
-        showJSON("error", "Firebase error: " + err.message, getElapsed());
-      });
-
-    function generateAndSaveKey() {
+    function generateAndSaveKey(path) {
       const key = generateKeyPattern();
       const now = Date.now();
-      db.ref(hwidPath).set({
+
+      db.ref(path).set({
         key: key,
         createdAt: now
       }).then(() => {
@@ -87,23 +97,8 @@
 
     function generateKeyPattern() {
       const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-      function randomBlock() {
-        return Array.from({length: 5}, () => charset[Math.floor(Math.random() * charset.length)]).join('');
-      }
-      return `${randomBlock()}-${randomBlock()}-${randomBlock()}`;
-    }
-
-    function showJSON(status, result, timeTaken) {
-      const json = {
-        status: status,
-        result: result,
-        "time-taken": timeTaken
-      };
-      outputElement.textContent = JSON.stringify(json, null, 2);
-    }
-
-    function getElapsed() {
-      return performance.now().toFixed(2) + "ms";
+      const block = () => Array.from({ length: 5 }, () => charset[Math.floor(Math.random() * charset.length)]).join('');
+      return `${block()}-${block()}-${block()}`;
     }
   </script>
 </body>
