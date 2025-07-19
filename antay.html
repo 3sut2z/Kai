@@ -6,15 +6,19 @@
   <script src="https://www.gstatic.com/firebasejs/10.3.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.3.0/firebase-database-compat.js"></script>
   <style>
-    body { font-family: monospace; background: #f9f9f9; padding: 20px; }
-    pre { background: #fff; padding: 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
+    body { font-family: monospace; background: #f4f4f4; padding: 20px; }
+    pre { background: #fff; padding: 16px; border-radius: 6px; border: 1px solid #ccc; }
   </style>
 </head>
 <body>
-  <pre id="output">Loading...</pre>
+
+  <pre id="output"></pre>
 
   <script>
     const startTime = performance.now();
+    const outputElement = document.getElementById("output");
+
+    showJSON("success", "Loading...", getElapsed());
 
     const firebaseConfig = {
       apiKey: "AIzaSyBXVJp50mN6kzm7LT0H1TBdQmPie8l6TOo",
@@ -34,7 +38,12 @@
     const hwid = params.get("hwid");
 
     if (!hwid) {
-      return outputJSON("error", "Missing 'hwid' parameter");
+      return showJSON("error", "Missing hwid parameter", getElapsed());
+    }
+    
+    const hwidPattern = /^[a-zA-Z0-9]{5}-[a-zA-Z0-9]{5}-[a-zA-Z0-9]{5}$/;
+    if (!hwidPattern.test(hwid)) {
+      return showJSON("error", "Invalid hwid format", getElapsed());
     }
 
     const hwidPath = 'hwids/' + encodeURIComponent(hwid);
@@ -51,53 +60,52 @@
           if (now - createdAt >= 24 * 60 * 60 * 1000) {
             ref.remove().then(() => {
               generateAndSaveKey();
+            }).catch(err => {
+              showJSON("error", "Failed to delete expired key: " + err.message, getElapsed());
             });
           } else {
-            const elapsed = (performance.now() - startTime).toFixed(2);
-            outputJSON("success", data.key, elapsed + "ms");
+            showJSON("success", data.key, getElapsed());
           }
         } else {
           generateAndSaveKey();
         }
       })
       .catch(err => {
-        const elapsed = (performance.now() - startTime).toFixed(2);
-        outputJSON("error", err.message, elapsed + "ms");
+        showJSON("error", "Firebase error: " + err.message, getElapsed());
       });
 
     function generateAndSaveKey() {
-      sha256(hwid).then(key => {
-        const now = Date.now();
-        const elapsed = (performance.now() - startTime).toFixed(2);
-
-        db.ref(hwidPath).set({
-          key: key,
-          createdAt: now
-        }).then(() => {
-          outputJSON("success", key, elapsed + "ms");
-        }).catch(err => {
-          outputJSON("error", err.message, elapsed + "ms");
-        });
+      const key = generateKeyPattern();
+      const now = Date.now();
+      db.ref(hwidPath).set({
+        key: key,
+        createdAt: now
+      }).then(() => {
+        showJSON("success", key, getElapsed());
+      }).catch(err => {
+        showJSON("error", "Failed to save key: " + err.message, getElapsed());
       });
     }
 
-    function outputJSON(status, result, timeTaken = null) {
-      const response = {
+    function generateKeyPattern() {
+      const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+      function randomBlock() {
+        return Array.from({length: 5}, () => charset[Math.floor(Math.random() * charset.length)]).join('');
+      }
+      return `${randomBlock()}-${randomBlock()}-${randomBlock()}`;
+    }
+
+    function showJSON(status, result, timeTaken) {
+      const json = {
         status: status,
-        result: result
+        result: result,
+        "time-taken": timeTaken
       };
-      if (timeTaken) response["time-taken"] = timeTaken;
-
-      document.getElementById('output').textContent = JSON.stringify(response, null, 2);
+      outputElement.textContent = JSON.stringify(json, null, 2);
     }
 
-    function sha256(str) {
-      const buffer = new TextEncoder("utf-8").encode(str);
-      return crypto.subtle.digest("SHA-256", buffer).then(hash => {
-        return Array.from(new Uint8Array(hash))
-          .map(b => b.toString(16).padStart(2, '0'))
-          .join('').slice(0, 32);
-      });
+    function getElapsed() {
+      return performance.now().toFixed(2) + "ms";
     }
   </script>
 </body>
