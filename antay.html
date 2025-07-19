@@ -1,79 +1,97 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
   <title>AnTay - Get Key</title>
   <script src="https://www.gstatic.com/firebasejs/10.3.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.3.0/firebase-database-compat.js"></script>
-  <style>
-    body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; }
-    input, button { padding: 10px; margin: 5px 0; width: 100%; }
-    pre { background: #f0f0f0; padding: 10px; border-radius: 5px; }
-  </style>
 </head>
 <body>
+<script>
+  const startTime = performance.now();
 
-  <h2>HWID to Key Generator</h2>
-  <input type="text" id="hwid" placeholder="Enter your HWID" />
-  <button onclick="getKey()">Get Key</button>
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    databaseURL: "YOUR_DATABASE_URL",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MSG_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
 
-  <h3>Response:</h3>
-  <pre id="result">Waiting for input...</pre>
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyBXVJp50mN6kzm7LT0H1TBdQmPie8l6TOo",
-      authDomain: "kai-bot---get-code.firebaseapp.com",
-      databaseURL: "https://kai-bot---get-code-default-rtdb.firebaseio.com/",
-      projectId: "kai-bot---get-code",
-      storageBucket: "kai-bot---get-code.appspot.com",
-      messagingSenderId: "944776263204",
-      appId: "1:944776263204:web:878007637128146ed70ab1",
-      measurementId: "G-CZ4GKJYSG3"
-    };
+  const params = new URLSearchParams(window.location.search);
+  const hwid = params.get("hwid");
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+  if (!hwid) {
+    return outputJSON("error", "Missing 'hwid' parameter");
+  }
 
-    async function getKey() {
-      const hwid = document.getElementById('hwid').value.trim();
-      const resultBox = document.getElementById('result');
+  const hwidPath = 'hwids/' + encodeURIComponent(hwid);
+  const ref = db.ref(hwidPath);
 
-      if (!hwid) {
-        resultBox.textContent = "❌ Please enter a HWID.";
-        return;
-      }
+  ref.once('value')
+    .then(snapshot => {
+      const now = Date.now();
 
-      try {
-        const ref = db.ref('hwids/' + encodeURIComponent(hwid));
-        const snapshot = await ref.once('value');
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        const createdAt = data.createdAt || 0;
 
-        if (snapshot.exists()) {
-          const data = snapshot.val();
-          resultBox.textContent = `✅ [From Firebase]\nKey: ${data.key}\nTime: ${data.time}`;
-          return;
-        }
-
-        const res = await fetch(`http://localhost:3000/?hwid=${encodeURIComponent(hwid)}`);
-        const data = await res.json();
-
-        if (data.status === 'success') {
-          const key = data.result;
-          const now = new Date().toISOString();
-
-          await ref.set({
-            key: key,
-            time: now
+        if (now - createdAt >= 24 * 60 * 60 * 1000) {
+          ref.remove().then(() => {
+            generateAndSaveKey();
           });
-
-          resultBox.textContent = `✅ [New Key Created]\nKey: ${key}\nTime: ${now}`;
         } else {
-          resultBox.textContent = `❌ Error: ${data.result}`;
+          const elapsed = (performance.now() - startTime).toFixed(2);
+          outputJSON("success", data.key, elapsed + "ms");
         }
-      } catch (err) {
-        resultBox.textContent = `❌ Exception: ${err.message}`;
+      } else {
+        generateAndSaveKey();
       }
+    })
+    .catch(err => {
+      const elapsed = (performance.now() - startTime).toFixed(2);
+      outputJSON("error", err.message, elapsed + "ms");
+    });
+
+  function generateAndSaveKey() {
+    const key = sha256(hwid).slice(0, 32);
+    const now = Date.now();
+    const elapsed = (performance.now() - startTime).toFixed(2);
+
+    db.ref(hwidPath).set({
+      key: key,
+      createdAt: now
+    }).then(() => {
+      outputJSON("success", key, elapsed + "ms");
+    }).catch(err => {
+      outputJSON("error", err.message, elapsed + "ms");
+    });
+  }
+
+  function outputJSON(status, result, timeTaken = null) {
+    const response = {
+      status: status,
+      result: result
+    };
+    if (timeTaken) response["time-taken"] = timeTaken;
+
+    document.body.innerHTML = `<pre>${JSON.stringify(response, null, 2)}</pre>`;
+    if (location.search.includes("raw=true")) {
+      document.body.innerText = JSON.stringify(response);
     }
-  </script>
+  }
+
+  function sha256(str) {
+    const buffer = new TextEncoder("utf-8").encode(str);
+    return crypto.subtle.digest("SHA-256", buffer).then(hash => {
+      return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+    });
+  }
+</script>
 </body>
 </html>
