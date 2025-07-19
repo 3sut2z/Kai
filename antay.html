@@ -11,16 +11,13 @@
 </head>
 <body>
 
-  <pre id="output"></pre>
+  <p id="output"></p>
 
   <script>
     const startTime = performance.now();
     const outputElement = document.getElementById("output");
 
     showJSON("success", "Loading...", getElapsed());
-
-    import { initializeApp } from "firebase/app";
-    import { getAnalytics } from "firebase/analytics";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBXVJp50mN6kzm7LT0H1TBdQmPie8l6TOo",
@@ -29,12 +26,8 @@
       projectId: "kai-bot---get-code",
       storageBucket: "kai-bot---get-code.firebasestorage.app",
       messagingSenderId: "944776263204",
-      appId: "1:944776263204:web:878007637128146ed70ab1",
-      measurementId: "G-CZ4GKJYSG3"
+      appId: "G-CZ4GKJYSG3"
     };
-
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
